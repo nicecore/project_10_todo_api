@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, g
 from flask_restful import (Resource, Api, reqparse, 
                             fields, marshal,
                             marshal_with, url_for)
@@ -34,7 +34,7 @@ class TodoList(Resource):
     @marshal_with(todo_fields)
     def post(self):
         args = self.reqparse.parse_args()
-        todo = models.Todo.create(**args)
+        todo = models.Todo.create(created_by=g.user, **args)
         return todo, 201
 
 
