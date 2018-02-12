@@ -41,6 +41,9 @@ class User(Model):
     def verify_password(self, password):
         return HASHER.verify(self.password, password)
 
+    def __str__(self):
+        return self.username
+
 
 
 

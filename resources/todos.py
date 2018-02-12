@@ -1,15 +1,17 @@
-from flask import Blueprint, g
+from flask import Blueprint, g, make_response
 from flask_restful import (Resource, Api, reqparse, 
                             fields, marshal,
                             marshal_with, url_for)
 import models
-
+from auth import auth
+import json
 
 
 todo_fields = {
     'id': fields.Integer,
     'name': fields.String,
-    'created_at': fields.DateTime
+    'created_at': fields.DateTime,
+    'created_by': fields.String
 }
 
 
@@ -31,10 +33,12 @@ class TodoList(Resource):
         return todos
 
 
+    @auth.login_required
     @marshal_with(todo_fields)
     def post(self):
         args = self.reqparse.parse_args()
-        todo = models.Todo.create(created_by=g.user, **args)
+        user = g.user
+        todo = models.Todo.create(created_by=user, **args)
         return todo, 201
 
 
@@ -57,14 +61,26 @@ class Todo(Resource):
 
 
     @marshal_with(todo_fields)
+    @auth.login_required
     def put(self, id):
         args = self.reqparse.parse_args()
-        query = models.Todo.update(**args).where(models.Todo.id == id)
+        try:
+            user = g.user
+            todo = models.Todo.select().where(
+                models.Todo.created_by==user,
+                models.Todo.id==id
+            ).get()
+        except models.Todo.DoesNotExist:
+            return make_response(json.dumps(
+                {'error': 'That todo does not exist or is not editable.'}
+            ), 403)
+        query = todo.update(**args)
         query.execute()
         return (models.Todo.get(models.Todo.id == id), 200,
                 {'Location': url_for('resources.todos.todo', id=id)})
 
 
+    @auth.login_required
     def delete(self, id):
         query = models.Todo.delete().where(models.Todo.id == id)
         query.execute()
