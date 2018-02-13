@@ -1,7 +1,7 @@
 from flask import Blueprint, g, make_response
-from flask_restful import (Resource, Api, reqparse, 
-                            fields, marshal,
-                            marshal_with, url_for)
+from flask_restful import (Resource, Api, reqparse,
+                           fields, marshal,
+                           marshal_with, url_for)
 import models
 from auth import auth
 import json
@@ -26,12 +26,10 @@ class TodoList(Resource):
         )
         super().__init__()
 
-
     def get(self):
         todos = [marshal(todo, todo_fields)
-                for todo in models.Todo.select()]
+                 for todo in models.Todo.select()]
         return todos
-
 
     @auth.login_required
     @marshal_with(todo_fields)
@@ -53,12 +51,10 @@ class Todo(Resource):
         )
         super().__init__()
 
-
     @marshal_with(todo_fields)
     def get(self, id):
         todo = models.Todo.get(models.Todo.id == id)
         return todo
-
 
     @marshal_with(todo_fields)
     @auth.login_required
@@ -67,8 +63,8 @@ class Todo(Resource):
         try:
             user = g.user
             todo = models.Todo.select().where(
-                models.Todo.created_by==user,
-                models.Todo.id==id
+                models.Todo.created_by == user,
+                models.Todo.id == id
             ).get()
         except models.Todo.DoesNotExist:
             return make_response(json.dumps(
@@ -78,7 +74,6 @@ class Todo(Resource):
         query.execute()
         return (models.Todo.get(models.Todo.id == id), 200,
                 {'Location': url_for('resources.todos.todo', id=id)})
-
 
     @auth.login_required
     def delete(self, id):
@@ -99,9 +94,3 @@ api.add_resource(
     '/todos/<int:id>',
     endpoint='todo'
 )
-
-
-
-
-
-

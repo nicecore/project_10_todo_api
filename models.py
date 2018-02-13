@@ -24,7 +24,7 @@ class User(Model):
         email = email.lower()
         try:
             cls.select().where(
-                (cls.email==email)|(cls.username**username)
+                (cls.email == email) | (cls.username**username)
             ).get()
         except cls.DoesNotExist:
             user = cls(username=username, email=email)
@@ -35,16 +35,29 @@ class User(Model):
             raise Exception("User with that email or username already exists")
 
     @staticmethod
+    def verify_auth_token(token):
+        serializer = Serializer(config.SECRET_KEY)
+        try:
+            data = serializer.loads(token)
+        except (SignatureExpired, BadSignature):
+            return None
+        else:
+            user = User.get(User.id == data['id'])
+            return user
+
+    @staticmethod
     def set_password(password):
         return HASHER.hash(password)
 
     def verify_password(self, password):
         return HASHER.verify(self.password, password)
 
+    def generate_auth_token(self, expires=3600):
+        serializer = Serializer(config.SECRET_KEY, expires_in=expires)
+        return serializer.dumps({'id': self.id})
+
     def __str__(self):
         return self.username
-
-
 
 
 class Todo(Model):

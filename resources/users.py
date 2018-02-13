@@ -3,8 +3,8 @@ import json
 from flask import jsonify, Blueprint, abort, make_response
 
 from flask_restful import (Resource, Api, reqparse,
-                               inputs, fields, marshal,
-                               marshal_with, url_for)
+                           inputs, fields, marshal,
+                           marshal_with, url_for)
 
 import models
 
@@ -43,7 +43,6 @@ class UserList(Resource):
         )
         super().__init__()
 
-
     def post(self):
         args = self.reqparse.parse_args()
         if args['password'] == args['verify_password']:
@@ -52,8 +51,8 @@ class UserList(Resource):
         return make_response(
             json.dumps({
                 'error': 'Password and password verification do not match'
-                }), 400
-            )
+            }), 400
+        )
 
 
 users_api = Blueprint('resources.users', __name__)
